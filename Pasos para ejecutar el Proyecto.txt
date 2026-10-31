@@ -1,0 +1,15 @@
+Cómo ejecutar el proyecto Botanas Bogos
+
+Requisitos: XAMPP y MySQL Workbench instalados.
+
+Abre XAMPP y activa los módulos Apache y MySQL con el botón Start.
+2. Abre MySQL Workbench, conéctate al servidor local (localhost, puerto 3306, usuario root) y abre el archivo botanas_bogos_v3.sql.
+3. Ejecuta el script completo con el rayo (⚡) o con Ctrl + Shift + Enter. Esto crea la base de datos botanas_bogos con todas las tablas y los datos de prueba.
+4. Copia la carpeta del proyecto BogosProyect dentro de 
+C:\xampp\htdocs\
+5. Abre el navegador y entra a: http://localhost/BogosProyect/Inicio/index.html
+
+Usuarios de prueba
+
+Administrador: admin@bogos.com / Admin123
+Repartidor: repartidor1@bogos.com / Rep123
