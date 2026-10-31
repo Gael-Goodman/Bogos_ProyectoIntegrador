@@ -1,0 +1,366 @@
+-- =====================================================================
+--  BASE DE DATOS: botanas_bogos  (VERSIÓN 2.0 - TEXTO PLANO)
+--  Proyecto Integrador 1 - Equipo 9
+--  
+--  Mejoras de V2: 
+--   - Tabla 'repartidores' blindada con vehiculo, placas y baja lógica (activo).
+--   - Tabla 'productos' actualizada con 'categoria' y 'stock_minimo'.
+--   - Contraseñas en texto plano para facilitar pruebas locales.
+-- =====================================================================
+
+DROP DATABASE IF EXISTS botanas_bogos;
+CREATE DATABASE IF NOT EXISTS botanas_bogos
+  CHARACTER SET utf8mb4
+  COLLATE utf8mb4_unicode_ci;
+
+USE botanas_bogos;
+
+-- =====================================================================
+--  1. CREACIÓN DE TABLAS (ESTRUCTURA)
+-- =====================================================================
+
+-- usuarios: cuentas de acceso internas (solo Administrador y Repartidor)
+CREATE TABLE usuarios (
+  id_usuario       INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  nombre_completo  VARCHAR(100) NOT NULL,
+  usuario          VARCHAR(30)  NOT NULL,
+  contrasena_hash  VARCHAR(255) NOT NULL, -- Se mantiene el nombre, pero guarda texto plano
+  rol              ENUM('Administrador','Repartidor') NOT NULL,
+  activo           TINYINT(1)   NOT NULL DEFAULT 1,
+  fecha_creacion   DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id_usuario),
+  UNIQUE KEY uq_usuarios_usuario (usuario)
+) ENGINE=InnoDB;
+
+-- repartidores: perfil logístico del usuario
+CREATE TABLE repartidores (
+  id_repartidor  INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  id_usuario     INT UNSIGNED NOT NULL,
+  telefono       VARCHAR(20)  NULL,
+  vehiculo       VARCHAR(100) NULL,
+  placas         VARCHAR(20)  NULL,
+  activo         TINYINT(1)   NOT NULL DEFAULT 1,
+  PRIMARY KEY (id_repartidor),
+  UNIQUE KEY uq_repartidores_usuario (id_usuario),
+  CONSTRAINT fk_repartidores_usuario
+    FOREIGN KEY (id_usuario) REFERENCES usuarios (id_usuario)
+) ENGINE=InnoDB;
+
+-- clientes: directorio interno de tienditas/sucursales
+CREATE TABLE clientes (
+  id_cliente       INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  nombre_negocio   VARCHAR(100) NOT NULL,
+  nombre_contacto  VARCHAR(100) NULL,
+  telefono         VARCHAR(20)  NULL,
+  direccion        VARCHAR(255) NOT NULL,
+  referencias      VARCHAR(255) NULL,
+  latitud          DECIMAL(10,7) NULL,
+  longitud         DECIMAL(10,7) NULL,
+  activo           TINYINT(1)   NOT NULL DEFAULT 1,
+  fecha_registro   DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id_cliente),
+  KEY idx_clientes_nombre (nombre_negocio)
+) ENGINE=InnoDB;
+
+-- productos: catálogo de botanas
+CREATE TABLE productos (
+  id_producto      INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  codigo           VARCHAR(20)  NOT NULL,
+  categoria        VARCHAR(50)  NULL,
+  nombre           VARCHAR(100) NOT NULL,
+  descripcion      VARCHAR(255) NULL,
+  precio_unitario  DECIMAL(10,2) NOT NULL,
+  stock_actual     INT NOT NULL DEFAULT 0,
+  stock_minimo     INT NOT NULL DEFAULT 10,
+  activo           TINYINT(1)   NOT NULL DEFAULT 1,
+  PRIMARY KEY (id_producto),
+  UNIQUE KEY uq_productos_codigo (codigo),
+  CONSTRAINT chk_productos_precio CHECK (precio_unitario >= 0),
+  CONSTRAINT chk_productos_stock  CHECK (stock_actual >= 0),
+  CONSTRAINT chk_productos_minimo CHECK (stock_minimo >= 0)
+) ENGINE=InnoDB;
+
+-- pedidos: cabecera de las órdenes de entrega
+CREATE TABLE pedidos (
+  id_pedido            INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  id_cliente           INT UNSIGNED NOT NULL,
+  id_repartidor        INT UNSIGNED NULL,
+  id_usuario_registro  INT UNSIGNED NOT NULL,
+  fecha_registro       DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  fecha_programada     DATE NULL,
+  urgencia             ENUM('Baja','Media','Alta') NOT NULL DEFAULT 'Media',
+  estado               ENUM('Pendiente','En Ruta','Entregada','No entregada','Rechazada','Cancelada') NOT NULL DEFAULT 'Pendiente',
+  total                DECIMAL(12,2) NOT NULL DEFAULT 0,
+  observaciones        VARCHAR(255) NULL,
+  motivo_no_entrega    VARCHAR(255) NULL,
+  fecha_entrega        DATETIME NULL,
+  fecha_actualizacion  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id_pedido),
+  KEY idx_pedidos_cliente (id_cliente),
+  KEY idx_pedidos_repartidor_estado (id_repartidor, estado),
+  KEY idx_pedidos_estado (estado),
+  CONSTRAINT fk_pedidos_cliente FOREIGN KEY (id_cliente) REFERENCES clientes (id_cliente),
+  CONSTRAINT fk_pedidos_repartidor FOREIGN KEY (id_repartidor) REFERENCES repartidores (id_repartidor),
+  CONSTRAINT fk_pedidos_usuario FOREIGN KEY (id_usuario_registro) REFERENCES usuarios (id_usuario)
+) ENGINE=InnoDB;
+
+-- detalle_pedido: productos de cada pedido
+CREATE TABLE detalle_pedido (
+  id_detalle       INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  id_pedido        INT UNSIGNED NOT NULL,
+  id_producto      INT UNSIGNED NOT NULL,
+  cantidad         INT NOT NULL,
+  precio_unitario  DECIMAL(10,2) NOT NULL,
+  subtotal         DECIMAL(12,2) GENERATED ALWAYS AS (cantidad * precio_unitario) STORED,
+  PRIMARY KEY (id_detalle),
+  UNIQUE KEY uq_detalle_pedido_producto (id_pedido, id_producto),
+  CONSTRAINT chk_detalle_pedido_cant CHECK (cantidad > 0),
+  CONSTRAINT fk_detalle_pedido_pedido FOREIGN KEY (id_pedido) REFERENCES pedidos (id_pedido) ON DELETE CASCADE,
+  CONSTRAINT fk_detalle_pedido_producto FOREIGN KEY (id_producto) REFERENCES productos (id_producto)
+) ENGINE=InnoDB;
+
+-- ventas: registro de ventas concretadas
+CREATE TABLE ventas (
+  id_venta     INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  id_pedido    INT UNSIGNED NULL,
+  id_cliente   INT UNSIGNED NOT NULL,
+  id_usuario   INT UNSIGNED NOT NULL,
+  fecha_venta  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  total        DECIMAL(12,2) NOT NULL DEFAULT 0,
+  PRIMARY KEY (id_venta),
+  UNIQUE KEY uq_ventas_pedido (id_pedido),
+  KEY idx_ventas_fecha (fecha_venta),
+  KEY idx_ventas_cliente (id_cliente),
+  CONSTRAINT fk_ventas_pedido FOREIGN KEY (id_pedido) REFERENCES pedidos (id_pedido),
+  CONSTRAINT fk_ventas_cliente FOREIGN KEY (id_cliente) REFERENCES clientes (id_cliente),
+  CONSTRAINT fk_ventas_usuario FOREIGN KEY (id_usuario) REFERENCES usuarios (id_usuario)
+) ENGINE=InnoDB;
+
+-- detalle_venta: productos de la venta
+CREATE TABLE detalle_venta (
+  id_detalle       INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  id_venta         INT UNSIGNED NOT NULL,
+  id_producto      INT UNSIGNED NOT NULL,
+  cantidad         INT NOT NULL,
+  precio_unitario  DECIMAL(10,2) NOT NULL,
+  subtotal         DECIMAL(12,2) GENERATED ALWAYS AS (cantidad * precio_unitario) STORED,
+  PRIMARY KEY (id_detalle),
+  UNIQUE KEY uq_detalle_venta_producto (id_venta, id_producto),
+  CONSTRAINT chk_detalle_venta_cant CHECK (cantidad > 0),
+  CONSTRAINT fk_detalle_venta_venta FOREIGN KEY (id_venta) REFERENCES ventas (id_venta) ON DELETE CASCADE,
+  CONSTRAINT fk_detalle_venta_producto FOREIGN KEY (id_producto) REFERENCES productos (id_producto)
+) ENGINE=InnoDB;
+
+-- facturas: comprobantes de venta
+CREATE TABLE facturas (
+  id_factura     INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  folio          VARCHAR(20) NULL,
+  id_venta       INT UNSIGNED NOT NULL,
+  id_cliente     INT UNSIGNED NOT NULL,
+  fecha_emision  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  total          DECIMAL(12,2) NOT NULL,
+  PRIMARY KEY (id_factura),
+  UNIQUE KEY uq_facturas_folio (folio),
+  UNIQUE KEY uq_facturas_venta (id_venta),
+  KEY idx_facturas_fecha (fecha_emision),
+  CONSTRAINT fk_facturas_venta FOREIGN KEY (id_venta) REFERENCES ventas (id_venta),
+  CONSTRAINT fk_facturas_cliente FOREIGN KEY (id_cliente) REFERENCES clientes (id_cliente)
+) ENGINE=InnoDB;
+
+-- movimientos_inventario: bitácora de stock
+CREATE TABLE movimientos_inventario (
+  id_movimiento     INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  id_producto       INT UNSIGNED NOT NULL,
+  tipo              ENUM('Entrada','Pedido','Venta','Cancelacion','Devolucion','Merma','Ajuste') NOT NULL,
+  cantidad          INT NOT NULL,
+  stock_resultante  INT NOT NULL,
+  id_pedido         INT UNSIGNED NULL,
+  id_venta          INT UNSIGNED NULL,
+  id_usuario        INT UNSIGNED NULL,
+  motivo            VARCHAR(255) NULL,
+  fecha_movimiento  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id_movimiento),
+  KEY idx_mov_producto_fecha (id_producto, fecha_movimiento),
+  CONSTRAINT fk_mov_producto FOREIGN KEY (id_producto) REFERENCES productos (id_producto),
+  CONSTRAINT fk_mov_pedido FOREIGN KEY (id_pedido) REFERENCES pedidos (id_pedido),
+  CONSTRAINT fk_mov_venta FOREIGN KEY (id_venta) REFERENCES ventas (id_venta),
+  CONSTRAINT fk_mov_usuario FOREIGN KEY (id_usuario) REFERENCES usuarios (id_usuario)
+) ENGINE=InnoDB;
+
+-- cortes_diarios: consolidado financiero
+CREATE TABLE cortes_diarios (
+  id_corte               INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  fecha_corte            DATE NOT NULL,
+  num_ventas             INT NOT NULL DEFAULT 0,
+  total_ventas           DECIMAL(12,2) NOT NULL DEFAULT 0,
+  num_facturas           INT NOT NULL DEFAULT 0,
+  pedidos_entregados     INT NOT NULL DEFAULT 0,
+  pedidos_no_entregados  INT NOT NULL DEFAULT 0,
+  id_usuario_genera      INT UNSIGNED NULL,
+  fecha_generacion       DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id_corte),
+  UNIQUE KEY uq_corte_fecha (fecha_corte),
+  CONSTRAINT fk_corte_usuario FOREIGN KEY (id_usuario_genera) REFERENCES usuarios (id_usuario)
+) ENGINE=InnoDB;
+
+
+-- =====================================================================
+--  2. POBLACIÓN DE DATOS INICIALES (DUMMY DATA)
+-- =====================================================================
+
+-- Usuarios (Contraseñas en texto plano para el login de desarrollo)
+INSERT INTO usuarios (nombre_completo, usuario, contrasena_hash, rol, activo) VALUES
+('Adolfo Colunga', 'admin@bogos.com', 'Admin123', 'Administrador', 1),
+('Angel Gonzalez', 'repartidor1@bogos.com', 'Rep123', 'Repartidor', 1),
+('Cristian Alday', 'repartidor2@bogos.com', 'Rep123', 'Repartidor', 1);
+
+-- Repartidores (Ya integrando vehículos y placas)
+INSERT INTO repartidores (id_usuario, telefono, vehiculo, placas, activo) VALUES
+(2, '8111111111', 'Nissan NP300', 'RJ-12-345', 1),
+(3, '8122222222', 'Chevrolet Tornado', 'XY-98-765', 1);
+
+-- Clientes
+INSERT INTO clientes (nombre_negocio, nombre_contacto, telefono, direccion, activo) VALUES
+('Abarrotes Garcia', 'Sr. Luis', '8123456789', 'Apodaca, N.L.', 1),
+('Mini Super Luna', 'Sra. Ana', '8187654321', 'Apodaca, N.L.', 1),
+('Abarrotes Liz', 'Sr. Miguel', '8112345678', 'Guadalupe, N.L.', 1),
+('Tienda El Sol', 'Sra. Marta', '8198765432', 'Apodaca, N.L.', 1),
+('Abarrotes Torres', 'Sr. Jose', '8121112233', 'Apodaca, N.L.', 0);
+
+-- Productos (Ya con categorías y stock mínimo integrado)
+INSERT INTO productos (codigo, categoria, nombre, precio_unitario, stock_actual, stock_minimo, activo) VALUES
+('P001', 'Frituras', 'Papas fritas 100g', 18.00, 50, 20, 1),
+('P002', 'Frituras', 'Chicharrones 100g', 22.00, 15, 20, 1),
+('P003', 'Cacahuates', 'Cacahuates 200g', 25.00, 80, 30, 1),
+('P004', 'Frituras', 'Botana mixta 150g', 20.00, 10, 20, 1),
+('P005', 'Frituras', 'Rueditas 100g', 18.00, 0, 10, 1);
+
+-- Pedidos (Con fechas ajustadas para mostrar datos recientes en reportes)
+INSERT INTO pedidos (id_cliente, id_repartidor, id_usuario_registro, fecha_registro, fecha_programada, urgencia, estado, total, observaciones) VALUES
+(1, 1, 1, NOW(), CURDATE(), 'Media', 'Entregada', 180.00, 'Entregado a tiempo'), 
+(2, NULL, 1, NOW(), CURDATE(), 'Alta', 'Pendiente', 110.00, 'Llamar antes de ir, no tienen timbre'), 
+(3, 2, 1, NOW(), CURDATE(), 'Media', 'En Ruta', 100.00, ''), 
+(4, 1, 1, DATE_SUB(NOW(), INTERVAL 1 DAY), DATE_SUB(CURDATE(), INTERVAL 1 DAY), 'Baja', 'Cancelada', 40.00, 'El cliente cerró temprano'), 
+(1, 2, 1, DATE_SUB(NOW(), INTERVAL 2 DAY), DATE_SUB(CURDATE(), INTERVAL 2 DAY), 'Media', 'Entregada', 90.00, ''); 
+
+-- Detalle de Pedidos
+INSERT INTO detalle_pedido (id_pedido, id_producto, cantidad, precio_unitario) VALUES
+(1, 1, 10, 18.00),
+(2, 2, 5, 22.00),
+(3, 3, 4, 25.00),
+(4, 4, 2, 20.00),
+(5, 5, 5, 18.00);
+
+-- Ventas 
+INSERT INTO ventas (id_pedido, id_cliente, id_usuario, fecha_venta, total) VALUES
+(1, 1, 1, NOW(), 180.00), 
+(5, 1, 1, DATE_SUB(NOW(), INTERVAL 2 DAY), 90.00), 
+(NULL, 2, 1, NOW(), 50.00); 
+
+-- Detalle de Ventas
+INSERT INTO detalle_venta (id_venta, id_producto, cantidad, precio_unitario) VALUES
+(1, 1, 10, 18.00),
+(2, 5, 5, 18.00),
+(3, 3, 2, 25.00);
+
+-- Facturas 
+INSERT INTO facturas (folio, id_venta, id_cliente, fecha_emision, total) VALUES
+('FAC-0001', 1, 1, NOW(), 180.00);
+
+-- Movimientos de Inventario 
+INSERT INTO movimientos_inventario (id_producto, tipo, cantidad, stock_resultante, id_pedido, id_venta, id_usuario, motivo, fecha_movimiento) VALUES
+(1, 'Entrada', 60, 60, NULL, NULL, 1, 'Inventario inicial de mes', DATE_SUB(NOW(), INTERVAL 5 DAY)),
+(1, 'Venta', -10, 50, 1, 1, 1, 'Descuento automático por Venta/Pedido #1', NOW()),
+(5, 'Entrada', 5, 5, NULL, NULL, 1, 'Inventario inicial de mes', DATE_SUB(NOW(), INTERVAL 5 DAY)),
+(5, 'Venta', -5, 0, 5, 2, 1, 'Descuento automático por Venta/Pedido #5', DATE_SUB(NOW(), INTERVAL 2 DAY));
+
+-- Cortes Diarios 
+INSERT INTO cortes_diarios (fecha_corte, num_ventas, total_ventas, num_facturas, pedidos_entregados, pedidos_no_entregados, id_usuario_genera) VALUES
+(DATE_SUB(CURDATE(), INTERVAL 2 DAY), 1, 90.00, 0, 1, 0, 1);
+
+
+-- =====================================================================
+--  [BLOQUE DE DOCUMENTACIÓN Y MIGRACIÓN V3.0 - FACTURACIÓN Y PAGOS]
+--  Pegar al final del script original
+-- =====================================================================
+
+-- 1. Agregar campos fiscales a la tabla de Clientes (CFDI 4.0)
+ALTER TABLE clientes 
+  ADD COLUMN rfc VARCHAR(13) NULL AFTER telefono,
+  ADD COLUMN razon_social VARCHAR(150) NULL AFTER rfc,
+  ADD COLUMN codigo_postal_fiscal VARCHAR(5) NULL AFTER razon_social,
+  ADD COLUMN regimen_fiscal VARCHAR(3) NULL AFTER codigo_postal_fiscal,
+  ADD COLUMN uso_cfdi VARCHAR(3) NULL AFTER regimen_fiscal,
+  ADD COLUMN correo_facturacion VARCHAR(150) NULL AFTER uso_cfdi;
+
+-- 2. Crear tabla para la configuración fiscal de la Empresa Emisor
+CREATE TABLE IF NOT EXISTS empresa_emisor (
+  id_empresa       INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  rfc              VARCHAR(13) NOT NULL,
+  razon_social     VARCHAR(150) NOT NULL,
+  regimen_fiscal   VARCHAR(3) NOT NULL,
+  codigo_postal    VARCHAR(5) NOT NULL,
+  serie_factura    VARCHAR(5) DEFAULT 'F',
+  folio_siguiente  INT UNSIGNED DEFAULT 1,
+  logo_url         VARCHAR(255) NULL,
+  PRIMARY KEY (id_empresa)
+) ENGINE=InnoDB;
+
+-- 3. Ampliar la tabla de Facturas para timbrado simulado (SAT)
+ALTER TABLE facturas
+  ADD COLUMN serie VARCHAR(5) NULL AFTER id_factura,
+  ADD COLUMN uuid VARCHAR(36) NULL AFTER folio,
+  ADD COLUMN sello_emisor TEXT NULL AFTER uuid,
+  ADD COLUMN sello_sat TEXT NULL AFTER sello_emisor,
+  ADD UNIQUE KEY uq_facturas_uuid (uuid);
+
+-- 4. Agregar forma de pago en Pedidos (Logística/Cobro)
+ALTER TABLE pedidos 
+  ADD COLUMN forma_pago ENUM('Efectivo', 'Tarjeta', 'Transferencia') NOT NULL DEFAULT 'Efectivo' AFTER total;
+
+-- 5. Agregar forma de pago en Ventas (Facturación/Contabilidad)
+ALTER TABLE ventas 
+  ADD COLUMN forma_pago ENUM('Efectivo', 'Tarjeta', 'Transferencia') NOT NULL DEFAULT 'Efectivo' AFTER total;
+
+
+-- =====================================================================
+--  ACTUALIZACIÓN DE DATOS PRUEBA (DUMMY DATA V3)
+-- =====================================================================
+
+-- Insertar los datos fiscales del negocio administrador
+INSERT INTO empresa_emisor (rfc, razon_social, regimen_fiscal, codigo_postal, serie_factura, folio_siguiente, logo_url) VALUES
+('BOGO261027XYZ', 'Distribuidora de Botanas Bogos', '612', '66600', 'F', 2, '/assets/img/logo_bogos.png');
+
+-- Asignar datos fiscales al Cliente #1
+UPDATE clientes 
+SET rfc = 'XAXX010101000',
+    razon_social = 'PUBLICO EN GENERAL',
+    codigo_postal_fiscal = '66600',
+    regimen_fiscal = '616',
+    uso_cfdi = 'S01',
+    correo_facturacion = 'facturas@agarcia.com'
+WHERE id_cliente = 1;
+
+-- Simular el sello y UUID en la Factura #1
+UPDATE facturas
+SET serie = 'F',
+    uuid = '74D908D5-16B4-4B28-86C2-0FE47963A2E8',
+    sello_emisor = 'E9bA...[HashSimuladoEmisor]...xQ==',
+    sello_sat = 'zK7t...[HashSimuladoSAT]...pP=='
+WHERE id_factura = 1;
+
+-- Asignar formas de pago a los registros de prueba existentes
+UPDATE pedidos SET forma_pago = 'Tarjeta' WHERE id_pedido = 2;
+UPDATE pedidos SET forma_pago = 'Transferencia' WHERE id_pedido = 5;
+
+UPDATE ventas SET forma_pago = 'Transferencia' WHERE id_venta = 2;
+UPDATE ventas SET forma_pago = 'Tarjeta' WHERE id_venta = 3;
+
+
+select * from clientes;
+
+ALTER TABLE cortes_diarios
+ADD COLUMN total_efectivo DECIMAL(12,2) NOT NULL DEFAULT 0.00 AFTER fecha_corte,
+ADD COLUMN total_tarjeta DECIMAL(12,2) NOT NULL DEFAULT 0.00 AFTER total_efectivo,
+ADD COLUMN total_transferencia DECIMAL(12,2) NOT NULL DEFAULT 0.00 AFTER total_tarjeta;
+
