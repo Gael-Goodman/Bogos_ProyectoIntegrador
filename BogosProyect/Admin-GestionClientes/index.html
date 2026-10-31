@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clientes - Botanas Bogos</title>
+    <link rel="icon" href="../CSS-IMAGENES/imagenes/logo.jpg" type="image/jpeg">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <script src="../seguridad.js"></script>
+</head>
+<body class="bg-light">
+
+    <div class="d-flex" style="min-height: 100vh;">
+        
+        <!-- Menú Lateral (Sidebar) -->
+        <div class="p-3 d-flex flex-column text-white" style="width: 260px; background-color: #0b1a45;">
+            <div class="text-center mb-4 mt-2">
+                <img src="../CSS-IMAGENES/imagenes/logo.jpg" alt="BOGO'S Botanas" class="img-fluid rounded-circle border border-2 border-white" style="width: 120px;">
+                <h5 class="mt-3 fw-bold">Panel Admin</h5>
+            </div>
+            
+            <ul class="nav nav-pills flex-column mb-auto gap-1">
+                <li class="nav-item"><a href="../Admin-Panel/index.html" class="nav-link text-white-50 hover-white"><i class="fa-solid fa-house me-2 w-20px text-center"></i> Inicio</a></li>
+                <li><a href="../Admin-Ventas/index.html" class="nav-link text-white-50 hover-white"><i class="fa-solid fa-cart-shopping me-2 w-20px text-center"></i> Ventas y Pedidos</a></li>
+                <li><a href="../Admin-Inventario/index.html" class="nav-link text-white-50 hover-white"><i class="fa-solid fa-box me-2 w-20px text-center"></i> Inventario</a></li>
+                <li><a href="index.html" class="nav-link active text-white" style="background-color: #d11f26;"><i class="fa-solid fa-store me-2 w-20px text-center"></i> Clientes (Tienditas)</a></li>
+                <li><a href="../Admin-CrearUsuario/index.html" class="nav-link text-white-50 hover-white"><i class="fa-solid fa-users me-2 w-20px text-center"></i> Usuarios</a></li>
+                <li><a href="../Admin-GestionRepartidores/index.html" class="nav-link text-white-50 hover-white"><i class="fa-solid fa-motorcycle me-2 w-20px text-center"></i> Repartidores</a></li>
+                <li><a href="../Admin-Facturacion/index.html" class="nav-link text-white-50 hover-white"><i class="fa-solid fa-file-invoice-dollar me-2 w-20px text-center"></i> Facturación</a></li>
+                <li><a href="../Admin-Cortes/index.html" class="nav-link text-white-50 hover-white"><i class="fa-solid fa-cash-register me-2 w-20px text-center"></i> Cortes Diarios</a></li>
+            </ul>
+        </div>
+
+        <!-- Contenido Principal -->
+        <div class="flex-grow-1 p-4 overflow-auto">
+            
+            <!-- Encabezado Superior -->
+            <div class="d-flex justify-content-between align-items-center border-bottom pb-3 mb-4">
+                <h2 class="fw-bold mb-0 text-dark">Gestión de Clientes</h2>
+                <div class="d-flex align-items-center">
+                    <span class="me-4 text-muted fw-semibold" id="fechaActual">Cargando fecha...</span>
+                    <div class="d-flex align-items-center bg-white px-3 py-2 rounded-pill shadow-sm border">
+                        <i class="fa-solid fa-user-circle fs-4 text-secondary me-2"></i>
+                        <span id="nombreAdmin" class="fw-bold me-3">Administrador</span>
+                        <a href="#" id="btnCerrarSesion" class="text-danger" title="Cerrar Sesión">
+                            <i class="fa-solid fa-right-from-bracket fs-5"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pestañas -->
+            <ul class="nav nav-tabs mb-4 border-bottom">
+                <li class="nav-item">
+                    <a class="nav-link active fw-bold border-bottom border-3" href="#" id="tabActivos" style="color: #d11f26; border-color: #d11f26 !important;">Tienditas Activas</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link text-muted fw-semibold" href="#" id="tabInactivos">Papelera</a>
+                </li>
+            </ul>
+
+            <!-- VISTA 1: ACTIVOS -->
+            <div id="vistaActivos">
+                <div class="card shadow-sm border-0 rounded-3 mb-4">
+                    <div class="card-body row align-items-center">
+                        <div class="col-md-6">
+                            <div class="input-group">
+                                <span class="input-group-text bg-white"><i class="fa-solid fa-magnifying-glass text-muted"></i></span>
+                                <input type="text" id="buscarCliente" class="form-control border-start-0 ps-0" placeholder="Buscar por negocio, contacto o teléfono...">
+                            </div>
+                        </div>
+                        <div class="col-md-6 text-end">
+                            <button class="btn text-white fw-semibold" style="background-color: #d11f26;" id="btnNuevoCliente">
+                                <i class="fa-solid fa-plus me-1"></i> Nueva Tiendita
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card shadow-sm border-0 rounded-3">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="ps-4">Negocio</th>
+                                    <th>Contacto</th>
+                                    <th>Teléfono</th>
+                                    <th>Dirección</th>
+                                    <th class="text-center pe-4">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tablaClientesActivos">
+                                <tr><td colspan="5" class="text-center text-muted py-4">Cargando clientes...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VISTA 2: INACTIVOS -->
+            <div id="vistaInactivos" class="d-none">
+                <div class="card shadow-sm border-0 rounded-3">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="ps-4">Negocio</th>
+                                    <th>Contacto</th>
+                                    <th>Dirección</th>
+                                    <th class="text-center pe-4">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tablaClientesInactivos">
+                                <tr><td colspan="4" class="text-center text-muted py-4">Cargando papelera...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+    
+    <!-- Modal Cliente -->
+    <div class="modal fade" id="modalCliente" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header text-white" style="background-color: #0b1a45;">
+                    <h5 class="modal-title fw-bold" id="tituloModalCliente">Nueva Tiendita</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formCliente">
+                        <input type="hidden" id="inputIdCliente">
+                        
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small fw-bold">Nombre del Negocio</label>
+                                <input type="text" class="form-control" id="inputNegocio" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small fw-bold">Nombre del Contacto</label>
+                                <input type="text" class="form-control" id="inputContacto">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small fw-bold">Teléfono</label>
+                                <input type="text" class="form-control" id="inputTelefono">
+                            </div>
+                            <div class="col-md-12">
+                                <label class="form-label text-muted small fw-bold">Dirección Completa</label>
+                                <input type="text" class="form-control" id="inputDireccion" required>
+                            </div>
+                            <div class="col-md-12">
+                                <label class="form-label text-muted small fw-bold">Referencias</label>
+                                <input type="text" class="form-control" id="inputReferencias" placeholder="Ej. Portón negro, frente al parque">
+                            </div>
+                            
+                            <!-- DIVISOR CORRECTAMENTE INTEGRADO -->
+                            <div class="col-12 mt-4">
+                                <hr class="mb-4 mt-0">
+                                <h6 class="fw-bold text-secondary mb-0"><i class="fa-solid fa-file-invoice me-2"></i>Datos Fiscales (CFDI 4.0 - Opcional)</h6>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="form-label text-muted small fw-bold">RFC</label>
+                                <input type="text" class="form-control text-uppercase" id="inputRfc" maxlength="13" placeholder="XAXX010101000">
+                            </div>
+                            <div class="col-md-8">
+                                <label class="form-label text-muted small fw-bold">Razón Social</label>
+                                <input type="text" class="form-control text-uppercase" id="inputRazonSocial" placeholder="PÚBLICO EN GENERAL">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label text-muted small fw-bold">C.P. Fiscal</label>
+                                <input type="text" class="form-control" id="inputCpFiscal" maxlength="5">
+                            </div>
+                            <div class="col-md-8">
+                                <label class="form-label text-muted small fw-bold">Régimen Fiscal</label>
+                                <select class="form-select" id="selectRegimen">
+                                    <option value="">Seleccione...</option>
+                                    <option value="601">601 - General de Ley Personas Morales</option>
+                                    <option value="612">612 - Personas Físicas con Actividades Empresariales</option>
+                                    <option value="616">616 - Sin obligaciones fiscales (Público General)</option>
+                                    <option value="626">626 - Régimen Simplificado de Confianza (RESICO)</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small fw-bold">Uso de CFDI</label>
+                                <select class="form-select" id="selectUsoCfdi">
+                                    <option value="">Seleccione...</option>
+                                    <option value="G01">G01 - Adquisición de mercancias</option>
+                                    <option value="G03">G03 - Gastos en general</option>
+                                    <option value="S01">S01 - Sin efectos fiscales</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small fw-bold">Correo para Facturas</label>
+                                <input type="email" class="form-control" id="inputCorreoFactura" placeholder="facturas@empresa.com">
+                            </div>
+
+                            <!-- DIVISOR -->
+                            <div class="col-12 mt-4">
+                                <hr class="mb-4 mt-0">
+                                <h6 class="fw-bold text-secondary mb-0"><i class="fa-solid fa-map-location-dot me-2"></i>Geolocalización (Opcional)</h6>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small fw-bold">Latitud</label>
+                                <input type="number" step="0.0000001" class="form-control" id="inputLatitud">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small fw-bold">Longitud</label>
+                                <input type="number" step="0.0000001" class="form-control" id="inputLongitud">
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn text-white fw-bold" style="background-color: #d11f26;" id="btnGuardarCliente">Guardar Cliente</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="clientes.js"></script>
+</body>
+</html>

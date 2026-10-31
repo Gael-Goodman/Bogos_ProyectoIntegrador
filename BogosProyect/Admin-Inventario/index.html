@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventario - Botanas Bogos</title>
+    <link rel="icon" href="../CSS-IMAGENES/imagenes/logo.jpg" type="image/jpeg">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-light">
+
+    <div class="d-flex" style="min-height: 100vh;">
+        
+        <!-- Menú Lateral (Sidebar) -->
+        <div class="p-3 d-flex flex-column text-white" style="width: 260px; background-color: #0b1a45;">
+            <div class="text-center mb-4 mt-2">
+                <img src="../CSS-IMAGENES/imagenes/logo.jpg" alt="BOGO'S Botanas" class="img-fluid rounded-circle border border-2 border-white" style="width: 120px;">
+                <h5 class="mt-3 fw-bold">Panel Admin</h5>
+            </div>
+            
+            <ul class="nav nav-pills flex-column mb-auto gap-1">
+                <li class="nav-item">
+                    <a href="../Admin-Panel/index.html" class="nav-link text-white-50 hover-white">
+                        <i class="fa-solid fa-house me-2 w-20px text-center"></i> Inicio
+                    </a>
+                </li>
+                <li>
+                    <a href="../Admin-Ventas/index.html" class="nav-link text-white-50 hover-white">
+                        <i class="fa-solid fa-cart-shopping me-2 w-20px text-center"></i> Ventas y Pedidos
+                    </a>
+                </li>
+                <li>
+                    <a href="index.html" class="nav-link active text-white" style="background-color: #d11f26;">
+                        <i class="fa-solid fa-box me-2 w-20px text-center"></i> Inventario
+                    </a>
+                </li>
+                <li>
+                    <a href="../Admin-GestionClientes/index.html" class="nav-link text-white-50 hover-white">
+                        <i class="fa-solid fa-store me-2 w-20px text-center"></i> Clientes (Tienditas)
+                    </a>
+                </li>
+                <li>
+                    <a href="../Admin-CrearUsuario/index.html" class="nav-link text-white-50 hover-white">
+                        <i class="fa-solid fa-users me-2 w-20px text-center"></i> Usuarios
+                    </a>
+                </li>
+                <li>
+                    <a href="../Admin-GestionRepartidores/index.html" class="nav-link text-white-50 hover-white">
+                        <i class="fa-solid fa-motorcycle me-2 w-20px text-center"></i> Repartidores
+                    </a>
+                </li>
+                <li>
+                    <a href="../Admin-Facturacion/index.html" class="nav-link text-white-50 hover-white">
+                        <i class="fa-solid fa-file-invoice-dollar me-2 w-20px text-center"></i> Facturación
+                    </a>
+                </li>
+                <li>
+                    <a href="../Admin-Cortes/index.html" class="nav-link text-white-50 hover-white">
+                        <i class="fa-solid fa-cash-register me-2 w-20px text-center"></i> Cortes Diarios
+                    </a>
+                </li>
+            </ul>
+            
+            <hr class="text-white-50">
+            <div class="text-center">
+                <small class="text-white-50">Botanas Bogos v1.0</small>
+            </div>
+        </div>
+
+        <!-- Contenido Principal -->
+        <div class="flex-grow-1 p-4 overflow-auto">
+            
+            <!-- Encabezado Superior -->
+            <div class="d-flex justify-content-between align-items-center border-bottom pb-3 mb-4">
+                <h2 class="fw-bold mb-0 text-dark">Inventario y Productos</h2>
+                <div class="d-flex align-items-center">
+                    <span class="me-4 text-muted fw-semibold" id="fechaActual">Cargando fecha...</span>
+                    <div class="d-flex align-items-center bg-white px-3 py-2 rounded-pill shadow-sm border">
+                        <i class="fa-solid fa-user-circle fs-4 text-secondary me-2"></i>
+                        <span id="nombreAdmin" class="fw-bold me-3">Administrador</span>
+                        <a href="#" id="btnCerrarSesion" class="text-danger" title="Cerrar Sesión">
+                            <i class="fa-solid fa-right-from-bracket fs-5"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pestañas de Navegación -->
+            <ul class="nav nav-tabs mb-4 border-bottom">
+                <li class="nav-item">
+                    <a class="nav-link active fw-bold border-bottom border-3" href="#" id="tabProductos" style="color: #d11f26; border-color: #d11f26 !important;">Productos</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link text-muted fw-semibold" href="#" id="tabMovimientos">Movimientos de inventario</a>
+                </li>
+                <li class="nav-item">
+                <a class="nav-link text-muted fw-semibold" href="#" id="tabInactivos">Papelera (Inactivos)</a>
+                </li>
+            </ul>
+
+            <!-- VISTA 1: PRODUCTOS -->
+            <div id="vistaProductos">
+                <!-- Panel de Filtros y Acciones -->
+                <div class="card shadow-sm border-0 rounded-3 mb-4">
+                    <div class="card-body">
+                        <div class="row g-3 align-items-center">
+                            <div class="col-md-4">
+                                <div class="input-group">
+                                    <span class="input-group-text bg-white"><i class="fa-solid fa-magnifying-glass text-muted"></i></span>
+                                    <input type="text" id="buscarProducto" class="form-control border-start-0 ps-0" placeholder="Buscar código o nombre...">
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <select id="filtroCategoria" class="form-select shadow-sm">
+                                    <option value="todas">Categoría: Todas</option>
+                                    <option value="Frituras">Frituras</option>
+                                    <option value="Cacahuates">Cacahuates</option>
+                                    <option value="Dulces">Dulces</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <select id="filtroEstado" class="form-select shadow-sm">
+                                    <option value="todos">Estado: Todos</option>
+                                    <option value="disponible">Disponible</option>
+                                    <option value="bajo">Stock bajo</option>
+                                    <option value="sin_stock">Sin stock</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2 text-end">
+                                <button class="btn text-white fw-semibold w-100" style="background-color: #d11f26;" id="btnNuevoProducto">
+                                    <i class="fa-solid fa-plus me-1"></i> Nuevo
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tabla de Productos -->
+                <div class="card shadow-sm border-0 rounded-3">
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th class="ps-4">Código</th>
+                                        <th>Nombre</th>
+                                        <th>Precio</th>
+                                        <th class="text-center">Stock actual</th>
+                                        <th class="text-center">Stock mínimo</th>
+                                        <th class="text-center">Estado</th>
+                                        <th class="text-center pe-4">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tablaProductos">
+                                    <tr><td colspan="7" class="text-center text-muted py-4">Cargando inventario...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VISTA 2: MOVIMIENTOS -->
+            <div id="vistaMovimientos" class="d-none">
+                <div class="card shadow-sm border-0 rounded-3">
+                    <div class="card-header bg-white border-bottom py-3">
+                        <h6 class="mb-0 fw-bold text-dark"><i class="fa-solid fa-clock-rotate-left me-2"></i>Historial de Entradas y Salidas</h6>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th class="ps-4">Fecha</th>
+                                        <th>Producto</th>
+                                        <th>Tipo</th>
+                                        <th class="text-center">Cantidad</th>
+                                        <th class="text-center">Stock Resultante</th>
+                                        <th>Motivo / Referencia</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tablaMovimientos">
+                                    <tr><td colspan="6" class="text-center text-muted py-4">Cargando movimientos...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VISTA 3: INACTIVOS -->
+<div id="vistaInactivos" class="d-none">
+    <div class="card shadow-sm border-0 rounded-3">
+        <div class="card-header bg-white border-bottom py-3">
+            <h6 class="mb-0 fw-bold text-danger"><i class="fa-solid fa-trash-can me-2"></i>Productos Eliminados</h6>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-4">Código</th>
+                            <th>Nombre</th>
+                            <th>Categoría</th>
+                            <th class="text-center pe-4">Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tablaInactivos">
+                        <tr><td colspan="4" class="text-center text-muted py-4">Cargando...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+        </div>
+    </div>
+    
+    <!-- Modal Formulario de Producto (Nuevo / Editar) -->
+    <div class="modal fade" id="modalProducto" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header text-white" style="background-color: #0b1a45;">
+                    <h5 class="modal-title fw-bold" id="tituloModalProducto">Nuevo Producto</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formProducto">
+                        <input type="hidden" id="inputIdProducto">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small fw-bold">Código (SKU)</label>
+                                <input type="text" class="form-control" id="inputCodigo" placeholder="Ej. P001" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small fw-bold">Categoría</label>
+                                <select class="form-select" id="selectCategoria" required>
+                                    <option value="Frituras">Frituras</option>
+                                    <option value="Cacahuates">Cacahuates</option>
+                                    <option value="Dulces">Dulces</option>
+                                </select>
+                            </div>
+                            <div class="col-md-12">
+                                <label class="form-label text-muted small fw-bold">Nombre del producto</label>
+                                <input type="text" class="form-control" id="inputNombre" placeholder="Ej. Papas fritas 100g" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label text-muted small fw-bold">Precio ($)</label>
+                                <input type="number" class="form-control" id="inputPrecio" step="0.01" min="0" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label text-muted small fw-bold">Stock Actual</label>
+                                <input type="number" class="form-control" id="inputStockActual" min="0" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label text-muted small fw-bold">Stock Mínimo</label>
+                                <input type="number" class="form-control" id="inputStockMinimo" min="0" required>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn text-white fw-bold" style="background-color: #d11f26;" id="btnGuardarProducto">Guardar producto</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="inventario.js"></script>
+</body>
+</html>

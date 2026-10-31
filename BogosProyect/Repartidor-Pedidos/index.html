@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Ruta - Bogos Reparto</title>
+    <link rel="icon" href="../CSS-IMAGENES/imagenes/logo.jpg" type="image/jpeg">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../CSS-IMAGENES/styles.css">
+    <script src="../seguridad.js"></script>
+    
+    <style>
+        /* Estilos específicos para la vista móvil del repartidor */
+        body { background-color: #f4f6f9; padding-bottom: 80px; }
+        .bottom-nav { border-top-left-radius: 20px; border-top-right-radius: 20px; box-shadow: 0 -4px 10px rgba(0,0,0,0.05); }
+        .nav-item-mobile { flex: 1; text-align: center; color: #adb5bd; transition: 0.3s; }
+        .nav-item-mobile.active { color: #d11f26; }
+        .card-pedido { border-radius: 15px; border-left: 5px solid #0d6efd; }
+        .btn-accion-movil { border-radius: 10px; font-weight: 600; padding: 10px 0; }
+    </style>
+</head>
+<body>
+
+    <!-- Header Superior -->
+    <nav class="navbar navbar-dark sticky-top shadow-sm" style="background-color: #0b1a45;">
+        <div class="container-fluid px-3 py-1">
+            <span class="navbar-brand mb-0 h1 fw-bold d-flex align-items-center">
+                <img src="../CSS-IMAGENES/imagenes/logo.jpg" alt="Logo" class="rounded-circle me-2 border border-white" style="width: 35px; height: 35px; object-fit: cover;">
+                Mi Ruta
+            </span>
+            <button class="btn btn-outline-light border-0" id="btnCerrarSesion" title="Cerrar Sesión">
+                <i class="fa-solid fa-right-from-bracket fs-5"></i>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Contenedor Principal -->
+    <div class="container mt-4">
+        <!-- Saludo y Resumen -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h5 class="fw-bold mb-0 text-dark" id="lblNombreRepartidor">Hola, Repartidor</h5>
+                <small class="text-muted" id="lblResumenRuta">Calculando pedidos pendientes...</small>
+            </div>
+            <div class="bg-primary text-white rounded-circle d-flex justify-content-center align-items-center shadow-sm" style="width: 45px; height: 45px;">
+                <i class="fa-solid fa-motorcycle fs-5"></i>
+            </div>
+        </div>
+
+        <!-- Área donde JS inyectará las tarjetas de los pedidos -->
+        <div id="contenedorPedidos">
+            <div class="text-center mt-5">
+                <div class="spinner-border text-primary" role="status"></div>
+                <p class="text-muted mt-2 fw-semibold">Cargando tu ruta de hoy...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Barra de Navegación Inferior (Bottom Nav) -->
+    <nav class="navbar fixed-bottom bg-white bottom-nav pb-2 pt-3">
+        <div class="container-fluid d-flex justify-content-around align-items-center">
+            <a href="index.html" class="nav-item-mobile active text-decoration-none">
+                <i class="fa-solid fa-map-location-dot fs-4 d-block mb-1"></i>
+                <span class="small fw-bold d-block" style="font-size: 0.75rem;">En Ruta</span>
+            </a>
+            <a href="historial.html" class="nav-item-mobile text-decoration-none">
+                <i class="fa-solid fa-clipboard-check fs-4 d-block mb-1"></i>
+                <span class="small fw-bold d-block" style="font-size: 0.75rem;">Historial</span>
+            </a>
+        </div>
+    </nav>
+
+    <!-- MODAL: Detalle de Productos (Para que sepa qué entregar) -->
+    <div class="modal fade" id="modalDetalleProductos" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content border-0 rounded-4 shadow">
+                <div class="modal-header border-bottom-0 pb-0">
+                    <h5 class="modal-title fw-bold">📦 Paquete #<span id="lblModalFolio"></span></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="p-3 bg-light rounded-3 mb-3 text-center border">
+                        <span class="d-block small text-muted fw-bold mb-1">A COBRAR</span>
+                        <h2 class="fw-bold text-success mb-0" id="lblModalTotal">$0.00</h2>
+                        <span class="badge bg-dark mt-2 fs-6" id="lblModalPago">💵 Efectivo</span>
+                    </div>
+                    
+                    <h6 class="fw-bold text-secondary mb-3"><i class="fa-solid fa-boxes-stacked me-2"></i>Contenido del paquete:</h6>
+                    <ul class="list-group list-group-flush" id="listaProductosModal">
+                        <!-- JS inyecta los productos aquí -->
+                    </ul>
+                </div>
+                <div class="modal-footer border-top-0 pt-0">
+                    <button type="button" class="btn btn-secondary w-100 rounded-pill fw-bold" data-bs-dismiss="modal">Cerrar Detalle</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: Reportar Problema / No Entregado -->
+    <div class="modal fade" id="modalProblema" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 rounded-4 shadow">
+                <div class="modal-header bg-danger text-white border-bottom-0 rounded-top-4">
+                    <h5 class="modal-title fw-bold"><i class="fa-solid fa-triangle-exclamation me-2"></i>Reportar Problema</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted fw-semibold">¿Por qué no se pudo entregar el pedido #<span id="lblModalProblemaFolio"></span>?</p>
+                    <input type="hidden" id="inputProblemaIdPedido">
+                    
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Selecciona el motivo (Estado):</label>
+                        <select class="form-select border-danger" id="selectMotivoProblema">
+                            <option value="No entregada">🏪 Local Cerrado / No se encontró a nadie</option>
+                            <option value="Rechazada">❌ El cliente rechazó el paquete / No quiso pagar</option>
+                            <option value="Cancelada">⚠️ Paquete dañado o accidente en ruta</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer border-top-0 pt-0">
+                    <button type="button" class="btn btn-light rounded-pill fw-bold" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-danger rounded-pill fw-bold px-4" id="btnConfirmarProblema">Confirmar Reporte</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="ruta.js"></script>
+</body>
+</html>

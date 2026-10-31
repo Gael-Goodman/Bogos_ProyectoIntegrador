@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inicio de Sesión - Botanas Bogos</title>
+    <!-- Logo en la pestaña del navegador -->
+    <link rel="icon" href="../CSS-IMAGENES/imagenes/logo.jpg" type="image/jpeg">
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome para los íconos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Estilos de la marca -->
+    <link rel="stylesheet" href="../CSS-IMAGENES/styles.css">
+    
+    <!-- Estilos internos para el fondo -->
+    <style>
+        .bg-login-image {
+            background: url('../CSS-IMAGENES/imagenes/fondo.jpg') no-repeat center center;
+            background-size: cover;
+            position: relative;
+        }
+        
+        /* Capa oscura para resaltar el contenido */
+        .bg-login-image::before {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 0;
+        }
+
+        .login-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .role-box.border-danger {
+            background-color: rgba(209, 31, 38, 0.05);
+        }
+    </style>
+</head>
+<body class="bg-login-image d-flex align-items-center vh-100">
+    
+    <div class="container login-content">
+        <div class="row align-items-center justify-content-center">
+            
+            <!-- Lado izquierdo: Logotipo y texto -->
+            <div class="col-md-6 text-center mb-4 mb-md-0 text-white" style="text-shadow: 2px 2px 4px rgba(0,0,0,0.8);">
+                <img src="../CSS-IMAGENES/imagenes/logo.jpg" alt="Logotipo Fritos y Botanas Bogos" class="img-fluid mb-3 rounded" style="max-width: 250px;">
+                <h2 class="fw-bold">Sistema de gestión<br>de ventas, inventario<br>y entregas</h2>
+            </div>
+            
+            <!-- Lado derecho: Tarjeta de formulario -->
+            <div class="col-md-5 col-lg-4">
+                <div class="card shadow-lg rounded-4 border-0">
+                    <div class="card-body p-4 text-center">
+                        <h3 class="fw-bold mb-1">Bienvenido</h3>
+                        <p class="text-muted mb-4">Inicia sesión para continuar</p>
+                        
+                        <form id="formLogin">
+                            <div class="input-group mb-3">
+                                <span class="input-group-text bg-white border-end-0"><i class="fa-regular fa-envelope text-secondary"></i></span>
+                                <input type="email" class="form-control border-start-0 ps-0" id="usuario" name="usuario" placeholder="Usuario (ej. admin@bogos.com)" required>
+                            </div>
+                            
+                            <div class="input-group mb-4">
+                                <span class="input-group-text bg-white border-end-0"><i class="fa-solid fa-lock text-secondary"></i></span>
+                                <input type="password" class="form-control border-start-0 border-end-0 ps-0" id="contrasena" name="contrasena" placeholder="Contraseña" required>
+                                <span class="input-group-text bg-white border-start-0" style="cursor: pointer;" id="togglePassword"><i class="fa-regular fa-eye text-secondary"></i></span>
+                            </div>
+                            
+                            <!-- Input oculto para almacenar el rol seleccionado -->
+                            <input type="hidden" id="rolSeleccionado" name="rol" value="">
+                            
+                            <button type="submit" class="btn btn-danger w-100 mb-4 rounded-3 fw-bold py-2" id="btnIniciarSesion" style="background-color: #d11f26; border: none;">Iniciar sesión</button>
+                        </form>
+
+                        <!-- Indicadores de roles interactivos -->
+                        <div class="row g-2 text-center text-secondary" id="selectorRoles">
+                            <div class="col-6">
+                                <div class="border rounded-3 p-2 role-box bg-white" data-rol="Administrador" style="cursor: pointer; transition: all 0.3s ease;">
+                                    <i class="fa-solid fa-user fs-4 d-block mb-1"></i>
+                                    <small class="fw-bold">Administrador</small>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="border rounded-3 p-2 role-box bg-white" data-rol="Repartidor" style="cursor: pointer; transition: all 0.3s ease;">
+                                    <i class="fa-solid fa-truck fs-4 d-block mb-1"></i>
+                                    <small class="fw-bold">Repartidor</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Bootstrap JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Script de lógica de login -->
+    <script src="login.js"></script>
+</body>
+</html>

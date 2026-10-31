@@ -1,0 +1,72 @@
+/* =========================================
+   Variables Globales de la Marca
+   ========================================= */
+:root {
+    --bogos-red: #d11f26;
+    --bogos-red-hover: #b01920;
+    --bogos-blue: #0b1a45;
+    --bogos-blue-hover: #152b66;
+    --bg-light: #f8f9fa;
+}
+
+/* =========================================
+   Estilos Generales
+   ========================================= */
+body {
+    background-color: var(--bg-light);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Botones personalizados */
+.btn-brand {
+    background-color: var(--bogos-red);
+    color: white;
+    border: none;
+}
+
+.btn-brand:hover {
+    background-color: var(--bogos-red-hover);
+    color: white;
+}
+
+/* =========================================
+   Pantalla de Inicio de Sesión
+   ========================================= */
+/* Fondo con imagen */
+.bg-login-image {
+    /* Ajusta la ruta si la imagen está en otro nivel de carpetas */
+    background: url('../Diseño-Imagenes/fondo.jpg') no-repeat center center;
+    background-size: cover;
+    position: relative;
+}
+
+/* Capa oscura (overlay) para resaltar la tarjeta blanca */
+.bg-login-image::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 0;
+}
+
+/* Elevar el contenido sobre el overlay */
+.login-content {
+    position: relative;
+    z-index: 1;
+}
+
+/* Estilos de selección interactiva de roles */
+.role-box.border-danger {
+    border-color: var(--bogos-red) !important;
+    color: var(--bogos-red) !important;
+    background-color: rgba(209, 31, 38, 0.05);
+}
+
+/* =========================================
+   Preparación para Panel de Administración
+   ========================================= */
+/* Menú lateral (Sidebar) que usaremos en la siguiente interfaz */
+.sidebar-bg {
+    background-color: var(--bogos-blue);
+    color: white;
+}

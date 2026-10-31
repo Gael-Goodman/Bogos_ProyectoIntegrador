@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Facturación - Botanas Bogos</title>
+    <link rel="icon" href="../CSS-IMAGENES/imagenes/logo.jpg" type="image/jpeg">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../CSS-IMAGENES/styles.css">
+    <script src="../seguridad.js"></script>
+    <style>
+        /* Estilos específicos para que el Modal parezca una hoja de papel (CFDI) */
+        .hoja-factura {
+            background-color: #fff;
+            border: 1px solid #dee2e6;
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+            padding: 2rem;
+            font-size: 0.85rem;
+            color: #333;
+        }
+        .hoja-factura h1, .hoja-factura h2, .hoja-factura h3, .hoja-factura h4, .hoja-factura h5 {
+            color: #0b1a45;
+        }
+        .borde-fiscal {
+            border: 1px solid #ced4da;
+            border-radius: 5px;
+            padding: 10px;
+            margin-bottom: 15px;
+        }
+        .etiqueta-fiscal {
+            font-size: 0.7rem;
+            font-weight: bold;
+            color: #6c757d;
+            text-transform: uppercase;
+            margin-bottom: 0;
+        }
+        .sello-fiscal {
+            font-size: 0.65rem;
+            word-break: break-all;
+            color: #555;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body class="bg-light">
+
+    <div class="d-flex" style="min-height: 100vh;">
+        
+        <!-- Menú Lateral -->
+        <div class="p-3 d-flex flex-column text-white" style="width: 260px; background-color: #0b1a45;">
+            <div class="text-center mb-4 mt-2">
+                <img src="../CSS-IMAGENES/imagenes/logo.jpg" alt="BOGO'S Botanas" class="img-fluid rounded-circle border border-2 border-white" style="width: 120px;">
+                <h5 class="mt-3 fw-bold">Panel Admin</h5>
+            </div>
+            
+            <ul class="nav nav-pills flex-column mb-auto gap-1">
+                <li class="nav-item"><a href="../Admin-Panel/index.html" class="nav-link text-white-50 hover-white"><i class="fa-solid fa-house me-2 w-20px text-center"></i> Inicio</a></li>
+                <li><a href="../Admin-Ventas/index.html" class="nav-link text-white-50 hover-white"><i class="fa-solid fa-cart-shopping me-2 w-20px text-center"></i> Ventas y Pedidos</a></li>
+                <li><a href="../Admin-Inventario/index.html" class="nav-link text-white-50 hover-white"><i class="fa-solid fa-box me-2 w-20px text-center"></i> Inventario</a></li>
+                <li><a href="../Admin-GestionClientes/index.html" class="nav-link text-white-50 hover-white"><i class="fa-solid fa-store me-2 w-20px text-center"></i> Clientes (Tienditas)</a></li>
+                <li><a href="../Admin-CrearUsuario/index.html" class="nav-link text-white-50 hover-white"><i class="fa-solid fa-users me-2 w-20px text-center"></i> Usuarios</a></li>
+                <li><a href="../Admin-GestionRepartidores/index.html" class="nav-link text-white-50 hover-white"><i class="fa-solid fa-motorcycle me-2 w-20px text-center"></i> Repartidores</a></li>
+                <li><a href="index.html" class="nav-link active text-white" style="background-color: #d11f26;"><i class="fa-solid fa-file-invoice-dollar me-2 w-20px text-center"></i> Facturación</a></li>
+                <li><a href="../Admin-Cortes/index.html" class="nav-link text-white-50 hover-white"><i class="fa-solid fa-cash-register me-2 w-20px text-center"></i> Cortes Diarios</a></li>
+            </ul>
+        </div>
+
+        <!-- Contenido Principal -->
+        <div class="flex-grow-1 p-4 overflow-auto">
+            
+            <!-- Encabezado -->
+            <div class="d-flex justify-content-between align-items-center border-bottom pb-3 mb-4">
+                <h2 class="fw-bold mb-0 text-dark">Módulo de Facturación (CFDI 4.0)</h2>
+                <div class="d-flex align-items-center">
+                    <span class="me-4 text-muted fw-semibold" id="fechaActual">Cargando fecha...</span>
+                    <div class="d-flex align-items-center bg-white px-3 py-2 rounded-pill shadow-sm border">
+                        <i class="fa-solid fa-user-circle fs-4 text-secondary me-2"></i>
+                        <span id="nombreAdmin" class="fw-bold me-3">Administrador</span>
+                        <a href="#" id="btnCerrarSesion" class="text-danger" title="Cerrar Sesión"><i class="fa-solid fa-right-from-bracket fs-5"></i></a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pestañas -->
+            <ul class="nav nav-tabs mb-4 border-bottom">
+                <li class="nav-item">
+                    <a class="nav-link active fw-bold border-bottom border-3" href="#" id="tabPendientes" style="color: #d11f26; border-color: #d11f26 !important;">Ventas por Facturar</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link text-muted fw-semibold" href="#" id="tabEmitidas">Historial de Facturas</a>
+                </li>
+            </ul>
+
+            <!-- VISTA 1: VENTAS PENDIENTES DE FACTURAR -->
+            <div id="vistaPendientes">
+                <div class="card shadow-sm border-0 rounded-3">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="ps-4">ID Venta</th>
+                                    <th>Fecha de Venta</th>
+                                    <th>Cliente / Negocio</th>
+                                    <th>Forma Pago</th>
+                                    <th>Total Cobrado</th>
+                                    <th class="text-center pe-4">Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tablaPendientes">
+                                <tr><td colspan="6" class="text-center text-muted py-4">Cargando ventas pendientes...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VISTA 2: FACTURAS EMITIDAS -->
+            <div id="vistaEmitidas" class="d-none">
+                <div class="card shadow-sm border-0 rounded-3">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="ps-4">Folio Factura</th>
+                                    <th>Fecha Emisión</th>
+                                    <th>Cliente / Negocio</th>
+                                    <th>ID Venta</th>
+                                    <th>Total Facturado</th>
+                                    <th class="text-center pe-4">Visualizar</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tablaEmitidas">
+                                <tr><td colspan="6" class="text-center text-muted py-4">Cargando facturas...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- =========================================================================
+         MODAL MAESTRO: CFDI 4.0 (Sirve para Pre-Vista y para Vista Final)
+         ========================================================================= -->
+    <div class="modal fade" id="modalFacturaCFDI" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content bg-light">
+                
+                <!-- Encabezado del Modal (No se imprime) -->
+                <div class="modal-header text-white" style="background-color: #0b1a45;">
+                    <h5 class="modal-title fw-bold" id="tituloModalCFDI"><i class="fa-solid fa-file-invoice me-2"></i>Vista Previa de Facturación</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                
+                <!-- Cuerpo del Modal (Representación Impresa) -->
+                <div class="modal-body p-4 p-md-5">
+                    <div class="hoja-factura mx-auto position-relative" style="max-width: 900px;">
+                        
+                        <!-- SELLO DE AGUA (OPCIONAL) -->
+                        <div id="selloPagado" class="position-absolute d-none text-danger fw-bold opacity-25" style="font-size: 6rem; top: 30%; left: 20%; transform: rotate(-30deg); border: 10px solid; padding: 10px 30px; border-radius: 20px; z-index: 0;">TIMBRADO</div>
+
+                        <div class="row mb-4 position-relative" style="z-index: 1;">
+                            <!-- Datos Emisor (Bogos) -->
+                            <div class="col-sm-7 d-flex align-items-center">
+                                <img src="../CSS-IMAGENES/imagenes/logo.jpg" alt="Logo" class="rounded border me-3" style="width: 100px;">
+                                <div>
+                                    <h4 class="fw-bold mb-0" id="lblEmisorRazon">DISTRIBUIDORA DE BOTANAS BOGOS</h4>
+                                    <p class="mb-0"><b>RFC:</b> <span id="lblEmisorRFC">BOGO261027XYZ</span></p>
+                                    <p class="mb-0"><b>Régimen Fiscal:</b> <span id="lblEmisorRegimen">612 - Personas Físicas con Actividades Empresariales</span></p>
+                                    <p class="mb-0"><b>C.P. Expedición:</b> <span id="lblEmisorCP">66600</span></p>
+                                </div>
+                            </div>
+                            
+                            <!-- Datos de la Factura -->
+                            <div class="col-sm-5 text-sm-end mt-3 mt-sm-0">
+                                <h3 class="fw-bold text-danger mb-1" id="lblFolioFactura">PRE-FACTURA</h3>
+                                <div class="borde-fiscal text-start d-inline-block p-2 bg-light w-100">
+                                    <p class="etiqueta-fiscal">Folio Fiscal (UUID)</p>
+                                    <p class="mb-2 fw-bold" id="lblUUID" style="font-size: 0.8rem; color: #d11f26;">PENDIENTE DE ASIGNAR</p>
+                                    
+                                    <p class="etiqueta-fiscal">Fecha y Hora de Emisión</p>
+                                    <p class="mb-2" id="lblFechaEmision">--/--/---- --:--</p>
+                                    
+                                    <p class="etiqueta-fiscal">Tipo de Comprobante</p>
+                                    <p class="mb-0">I - Ingreso</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Datos del Cliente (Receptor) -->
+                        <div class="borde-fiscal position-relative" style="z-index: 1;">
+                            <h6 class="fw-bold mb-3 border-bottom pb-2">DATOS DEL RECEPTOR</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p class="etiqueta-fiscal">Razón Social / Nombre</p>
+                                    <p class="mb-2 fw-bold" id="lblReceptorRazon">Cargando...</p>
+                                    
+                                    <p class="etiqueta-fiscal">RFC</p>
+                                    <p class="mb-2" id="lblReceptorRFC">Cargando...</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p class="etiqueta-fiscal">Uso de CFDI</p>
+                                    <p class="mb-2" id="lblReceptorUso">G03 - Gastos en general</p>
+                                    
+                                    <p class="etiqueta-fiscal">Domicilio Fiscal (C.P.)</p>
+                                    <p class="mb-2" id="lblReceptorCP">Cargando...</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Detalles Comerciales -->
+                        <div class="row mb-3 position-relative" style="z-index: 1;">
+                            <div class="col-md-4"><p class="etiqueta-fiscal">Forma de Pago:</p><p id="lblFormaPago">01 - Efectivo</p></div>
+                            <div class="col-md-4"><p class="etiqueta-fiscal">Método de Pago:</p><p>PUE - Pago en una sola exhibición</p></div>
+                            <div class="col-md-4"><p class="etiqueta-fiscal">Moneda:</p><p>MXN - Peso Mexicano</p></div>
+                        </div>
+
+                        <!-- Tabla de Conceptos (Productos) -->
+                        <div class="table-responsive mb-4 position-relative" style="z-index: 1;">
+                            <table class="table table-sm table-bordered border-dark mb-0 text-center">
+                                <thead class="table-light border-dark">
+                                    <tr>
+                                        <th style="width: 10%;">Cant.</th>
+                                        <th style="width: 15%;">ClaveProd</th>
+                                        <th style="width: 45%; text-align: left;">Descripción</th>
+                                        <th style="width: 15%;">Valor Unitario</th>
+                                        <th style="width: 15%;">Importe</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tablaConceptosFactura">
+                                    <!-- Inyectado por JS -->
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Totales -->
+                        <div class="row mb-4 position-relative" style="z-index: 1;">
+                            <div class="col-md-7">
+                                <!-- Espacio para importe con letra si se desea a futuro -->
+                            </div>
+                            <div class="col-md-5">
+                                <table class="table table-sm table-borderless text-end mb-0">
+                                    <tr>
+                                        <td class="fw-bold">SUBTOTAL:</td>
+                                        <td id="lblSubtotalFactura">$0.00</td>
+                                    </tr>
+                                    <tr class="border-bottom border-dark">
+                                        <td class="fw-bold">IVA (16%):</td>
+                                        <td id="lblIvaFactura">$0.00</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="fw-bold fs-5 text-dark">TOTAL:</td>
+                                        <td class="fw-bold fs-5 text-dark" id="lblTotalFacturaModal">$0.00</td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Área de Sellos Digitales (Se oculta en Pre-Factura, se muestra al Timbrar) -->
+                        <div id="areaSellosSAT" class="d-none mt-5 border-top pt-3 position-relative" style="z-index: 1;">
+                            <div class="row align-items-center">
+                                <div class="col-sm-3 text-center mb-3 mb-sm-0">
+                                    <!-- QR Dummy Generado con CSS -->
+                                    <div class="bg-dark mx-auto" style="width: 120px; height: 120px; padding: 5px;">
+                                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=110x110&data=BogosFacturacion" alt="QR Fiscal" class="img-fluid bg-white">
+                                    </div>
+                                </div>
+                                <div class="col-sm-9">
+                                    <p class="etiqueta-fiscal">Sello Digital del CFDI</p>
+                                    <p class="sello-fiscal mb-2" id="lblSelloEmisor">Cargando sello...</p>
+                                    
+                                    <p class="etiqueta-fiscal">Sello del SAT</p>
+                                    <p class="sello-fiscal mb-2" id="lblSelloSAT">Cargando sello...</p>
+                                    
+                                    <p class="etiqueta-fiscal">Cadena Original del Complemento de Certificación del SAT</p>
+                                    <p class="sello-fiscal mb-0" id="lblCadenaOriginal">||1.1|PENDIENTE|...</p>
+                                </div>
+                            </div>
+                            <p class="text-center text-muted mt-3" style="font-size: 0.65rem;">Este documento es una representación impresa de un CFDI.</p>
+                        </div>
+
+                        <!-- ID Oculto para emitir la factura -->
+                        <input type="hidden" id="inputIdVenta">
+
+                    </div>
+                </div>
+                
+                <!-- Footer de Acciones (Fuera del Papel) -->
+                <div class="modal-footer justify-content-center p-3" style="background-color: #f1f3f5;">
+                    <button type="button" class="btn btn-secondary px-4 fw-bold rounded-pill" data-bs-dismiss="modal">Cerrar Ventana</button>
+                    
+                    <!-- Botón para Emitir (Aparece en pestaña 1) -->
+                    <button type="button" class="btn text-white px-5 fw-bold rounded-pill shadow-sm" style="background-color: #d11f26;" id="btnTimbrarFactura">
+                        <i class="fa-solid fa-bell-concierge me-2"></i> Timbrar Factura Oficial
+                    </button>
+                    
+                    <!-- Botón para Imprimir (Aparece en pestaña 2) -->
+                    <button type="button" class="btn btn-primary px-5 fw-bold rounded-pill shadow-sm d-none" id="btnImprimirFactura" onclick="window.print()">
+                        <i class="fa-solid fa-print me-2"></i> Imprimir / Guardar PDF
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="facturacion.js"></script>
+</body>
+</html>
