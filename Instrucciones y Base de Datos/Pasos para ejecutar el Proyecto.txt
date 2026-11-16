@@ -17,7 +17,7 @@ PASOS
 3. Abre MySQL Workbench y conéctate al servidor local:
    Host: localhost     Puerto: 3306     Usuario: root     Contraseña: (vacía)
 
-4. Abre el archivo Bogos_VersionFinal_Sembrada.sql
+4. Abre el archivo Bogos_VersionFinal_Sembrada.sql que se encuentra justo en la misma carpeta de esta nota.
    (File > Open SQL Script).
 
 5. Ejecuta el script completo con el rayo o con Ctrl + Shift + Enter,
