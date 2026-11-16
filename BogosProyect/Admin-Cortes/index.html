@@ -68,10 +68,16 @@
                             <i class="fa-solid fa-magnifying-glass me-1"></i> Consultar
                         </button>
                     </div>
-                    <div class="col-md-4 text-md-end mt-3 mt-md-0">
-                        <button class="btn text-white fw-bold px-4 mt-md-4" style="background-color: #d11f26;" id="btnRealizarCorte">
-                            <i class="fa-solid fa-lock me-2"></i> Cerrar Caja del Día
-                        </button>
+                    <div class="col-md-4 mt-3 mt-md-0">
+                        <div class="d-flex flex-wrap gap-2 justify-content-md-end mt-md-4">
+                            <!-- Solo aparece cuando la fecha consultada ya tiene corte cerrado -->
+                            <button class="btn btn-outline-danger fw-bold d-none" id="btnVerPdfCorteActual">
+                                <i class="fa-solid fa-file-pdf me-1"></i> Ver PDF
+                            </button>
+                            <button class="btn text-white fw-bold px-4" style="background-color: #d11f26;" id="btnRealizarCorte">
+                                <i class="fa-solid fa-lock me-2"></i> Cerrar Caja del Día
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -163,16 +169,43 @@
                                     <th>Transferencia</th>
                                     <th>Total Corte</th>
                                     <th>Cerrado Por</th>
+                                    <th class="text-center pe-4">PDF</th>
                                 </tr>
                             </thead>
                             <tbody id="tablaHistorialCortes">
-                                <tr><td colspan="7" class="text-center text-muted py-4">Cargando historial de cortes...</td></tr>
+                                <tr><td colspan="8" class="text-center text-muted py-4">Cargando historial de cortes...</td></tr>
                             </tbody>
                         </table>
                     </div>
                 </div>
             </div>
 
+        </div>
+    </div>
+
+    <!-- =========================================================================
+         MODAL: VISOR DEL PDF DE UN CORTE
+         ========================================================================= -->
+    <div class="modal fade" id="modalPdfCorte" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header text-white" style="background-color: #0b1a45;">
+                    <h5 class="modal-title fw-bold"><i class="fa-solid fa-file-pdf me-2"></i><span id="tituloModalPdfCorte">Corte de caja</span></h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body p-0 bg-secondary">
+                    <iframe id="visorPdfCorte" title="PDF del corte" src="about:blank" style="width: 100%; height: 75vh; border: 0; display: block;"></iframe>
+                </div>
+                <div class="modal-footer justify-content-center" style="background-color: #f1f3f5;">
+                    <button type="button" class="btn btn-secondary px-4 fw-bold rounded-pill" data-bs-dismiss="modal">Cerrar</button>
+                    <a class="btn btn-outline-primary px-4 fw-bold rounded-pill" id="btnAbrirPdfCorte" href="#" target="_blank" rel="noopener">
+                        <i class="fa-solid fa-up-right-from-square me-2"></i> Abrir en otra pestaña
+                    </a>
+                    <a class="btn text-white px-4 fw-bold rounded-pill" style="background-color: #d11f26;" id="btnDescargarPdfCorte" href="#">
+                        <i class="fa-solid fa-download me-2"></i> Descargar PDF
+                    </a>
+                </div>
+            </div>
         </div>
     </div>
 

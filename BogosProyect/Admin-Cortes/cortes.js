@@ -1,5 +1,7 @@
 let ventasDiaGlobal = [];
 let historialCortesGlobal = [];
+let modalPdfCorte = null;
+let idCorteFechaConsultada = null; // id del corte cerrado de la fecha que se está consultando
 let estadoCorteActual = {
     corte_existente: false,
     totales: { efectivo: 0, tarjeta: 0, transferencia: 0, total_general: 0 },
@@ -18,7 +20,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // 2. Inicializar el campo date picker con la fecha de hoy (YYYY-MM-DD)
     const inputFecha = document.getElementById("fechaConsulta");
-    const hoyISO = fechaHoyObj.toISOString().split('T')[0];
+    // CORREGIDO: toISOString() da la fecha en horario UTC, y en México por la tarde/noche
+    // ya marcaba el día siguiente (el corte se guardaba con fecha de mañana). Se usa la fecha local.
+    const hoyISO = `${fechaHoyObj.getFullYear()}-${String(fechaHoyObj.getMonth() + 1).padStart(2, '0')}-${String(fechaHoyObj.getDate()).padStart(2, '0')}`;
     inputFecha.value = hoyISO;
 
     // 3. Cargar datos iniciales
@@ -36,6 +40,17 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     document.getElementById("btnRealizarCorte").addEventListener("click", realizarCorteCaja);
+
+    // Visor de PDF de cortes
+    modalPdfCorte = new bootstrap.Modal(document.getElementById("modalPdfCorte"));
+    document.getElementById("modalPdfCorte").addEventListener("hidden.bs.modal", () => {
+        document.getElementById("visorPdfCorte").src = "about:blank";
+    });
+    document.getElementById("btnVerPdfCorteActual").addEventListener("click", () => {
+        if (idCorteFechaConsultada) {
+            verPdfCorte(idCorteFechaConsultada, document.getElementById("fechaConsulta").value);
+        }
+    });
 
     // Pestañas
     document.getElementById("tabVentasDia").addEventListener("click", (e) => cambiarPestaña(e, 'ventas'));
@@ -117,6 +132,10 @@ async function cargarCorteFecha(fecha) {
 
         // Renderizar tabla de ventas
         renderizarVentasDia(ventasDiaGlobal);
+
+        // Botón "Ver PDF" de la fecha consultada (solo si ya tiene corte cerrado)
+        idCorteFechaConsultada = (datos.corte_cerrado && datos.corte_data) ? datos.corte_data.id_corte : null;
+        document.getElementById("btnVerPdfCorteActual").classList.toggle('d-none', !idCorteFechaConsultada);
 
         // Actualizar estado del botón de cierre de caja
         const btnCorte = document.getElementById("btnRealizarCorte");
@@ -238,7 +257,7 @@ async function cargarHistorialCortes() {
         const datos = await respuesta.json();
 
         if (!datos.exito) {
-            tbody.innerHTML = `<tr><td colspan="7" class="text-center text-danger py-4">${datos.mensaje}</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="8" class="text-center text-danger py-4">${datos.mensaje}</td></tr>`;
             return;
         }
 
@@ -246,7 +265,7 @@ async function cargarHistorialCortes() {
         renderizarHistorialCortes(historialCortesGlobal);
 
     } catch (error) {
-        tbody.innerHTML = `<tr><td colspan="7" class="text-center text-danger py-4">Error al cargar historial de cortes.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="8" class="text-center text-danger py-4">Error al cargar historial de cortes.</td></tr>`;
     }
 }
 
@@ -255,7 +274,7 @@ function renderizarHistorialCortes(cortes) {
     tbody.innerHTML = "";
 
     if (cortes.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="7" class="text-center text-muted py-4">No se han registrado cierres de caja aún.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="8" class="text-center text-muted py-4">No se han registrado cierres de caja aún.</td></tr>`;
         return;
     }
 
@@ -269,9 +288,29 @@ function renderizarHistorialCortes(cortes) {
             <td class="text-info">$${parseFloat(c.total_transferencia).toFixed(2)}</td>
             <td class="fw-bold text-dark">$${parseFloat(c.total_general).toFixed(2)}</td>
             <td><small class="text-muted">${c.usuario_cierre || 'Administrador'}</small></td>
+            <td class="text-center pe-4">
+                <button class="btn btn-sm btn-outline-danger fw-semibold" title="Ver el PDF de este corte"
+                        onclick="verPdfCorte(${parseInt(c.id_corte)}, '${c.fecha_corte}')">
+                    <i class="fa-solid fa-file-pdf me-1"></i> Ver PDF
+                </button>
+            </td>
         `;
         tbody.appendChild(tr);
     });
+}
+
+// ================= VISOR DE PDF DE CORTES =================
+
+// Abre el PDF del corte dentro de la página. Si el corte es antiguo y aún no tiene
+// PDF guardado, el servidor lo genera en ese momento.
+function verPdfCorte(idCorte, etiquetaFecha) {
+    const url = `ver_corte_pdf.php?id_corte=${idCorte}`;
+    document.getElementById("tituloModalPdfCorte").textContent =
+        `Corte de caja #${idCorte}` + (etiquetaFecha ? ` — ${etiquetaFecha}` : '');
+    document.getElementById("visorPdfCorte").src = `${url}&t=${Date.now()}`;
+    document.getElementById("btnAbrirPdfCorte").href = url;
+    document.getElementById("btnDescargarPdfCorte").href = `${url}&descargar=1`;
+    modalPdfCorte.show();
 }
 
 // ================= ACCIÓN: CERRA CAJA / GUARDAR CORTE =================
@@ -318,9 +357,14 @@ async function realizarCorteCaja() {
         const resultado = await respuesta.json();
 
         if (resultado.exito) {
-            alert("¡Cierre de caja registrado exitosamente!");
             cargarCorteFecha(fechaSeleccionada);
             cargarHistorialCortes();
+            // Mostrar de inmediato el PDF del corte recién cerrado
+            if (resultado.id_corte) {
+                verPdfCorte(resultado.id_corte, fechaSeleccionada);
+            } else {
+                alert("¡Cierre de caja registrado exitosamente!");
+            }
         } else {
             alert("Error al realizar el corte: " + resultado.mensaje);
         }

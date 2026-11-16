@@ -1,0 +1,37 @@
+CÓMO EJECUTAR EL PROYECTO BOTANAS BOGOS
+=======================================
+
+REQUISITOS
+- XAMPP (incluye Apache, PHP y la base de datos MariaDB).
+- MySQL Workbench (para ejecutar el script de la base de datos).
+- Conexión a internet (los estilos e íconos se cargan en línea).
+
+PASOS
+
+1. Abre XAMPP y presiona Start en los módulos Apache y MySQL.
+   Los dos deben quedar en color verde.
+
+2. Copia la carpeta del proyecto "BogosProyect" dentro de:
+   C:\xampp\htdocs\
+
+3. Abre MySQL Workbench y conéctate al servidor local:
+   Host: localhost     Puerto: 3306     Usuario: root     Contraseña: (vacía)
+
+4. Abre el archivo Bogos_VersionFinal_Sembrada.sql
+   (File > Open SQL Script).
+
+5. Ejecuta el script completo con el rayo o con Ctrl + Shift + Enter,
+   sin seleccionar texto. Revisa que en el panel Output no aparezca
+   ninguna línea en rojo.
+   Esto crea la base de datos "botanas_bogos" con todas las tablas y
+   los datos de prueba.
+
+6. Abre el navegador y entra a:
+   http://localhost/BogosProyect/Inicio/index.html
+
+
+USUARIOS DE PRUEBA
+  Administrador:  admin@bogos.com        / Admin123
+  Administrador:  admin2@bogos.com       / Admin123
+  Repartidor:     repartidor1@bogos.com  / Rep123
+  (también repartidor2, repartidor3 y repartidor4, misma contraseña)

@@ -1,4 +1,6 @@
 let modalFacturaCFDI;
+let modalPdfFactura;
+let pdfPendienteDeAbrir = null; // factura cuyo PDF se abre al terminar de cerrarse el modal del CFDI
 
 document.addEventListener("DOMContentLoaded", () => {
     // 1. Configurar fecha en el Header
@@ -7,6 +9,24 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("fechaActual").innerText = "Hoy: " + fecha.charAt(0).toUpperCase() + fecha.slice(1);
 
     modalFacturaCFDI = new bootstrap.Modal(document.getElementById('modalFacturaCFDI'));
+
+    // Visor de PDF de facturas
+    modalPdfFactura = new bootstrap.Modal(document.getElementById('modalPdfFactura'));
+    document.getElementById('modalPdfFactura').addEventListener('hidden.bs.modal', () => {
+        document.getElementById('visorPdfFactura').src = 'about:blank';
+    });
+    // Bootstrap no permite dos modales abiertos a la vez: el PDF se abre cuando el del CFDI ya se cerró
+    document.getElementById('modalFacturaCFDI').addEventListener('hidden.bs.modal', () => {
+        if (pdfPendienteDeAbrir) {
+            const p = pdfPendienteDeAbrir;
+            pdfPendienteDeAbrir = null;
+            verPdfFactura(p.id_venta, p.folio);
+        }
+    });
+    // Botón "Ver / Descargar PDF" del modal del CFDI (antes solo mandaba a imprimir la pantalla)
+    document.getElementById('btnImprimirFactura').addEventListener('click', () => {
+        abrirPdfDesdeCFDI(document.getElementById('inputIdVenta').value, document.getElementById('lblFolioFactura').innerText);
+    });
 
     // 2. Iniciar cargando la primera pestaña
     cargarVentasPendientes();
@@ -111,7 +131,11 @@ async function cargarFacturasEmitidas() {
                 <td class="fw-semibold text-dark">${f.razon_social || f.nombre_negocio}</td>
                 <td class="text-muted">#${f.id_venta}</td>
                 <td class="text-dark fw-bold">$${parseFloat(f.total).toFixed(2)}</td>
-                <td class="text-center pe-4">
+                <td class="text-center pe-4 text-nowrap">
+                    <button class="btn btn-sm btn-outline-danger fw-semibold me-1" title="Ver el PDF de esta factura"
+                            onclick="verPdfFactura(${parseInt(f.id_venta)}, '${f.serie}-${f.folio}')">
+                        <i class="fa-solid fa-file-pdf me-1"></i> Ver PDF
+                    </button>
                     <button class="btn btn-sm btn-outline-primary" onclick="verFacturaOficial(${f.id_venta}, '${f.uuid}')">
                         <i class="fa-solid fa-eye me-1"></i> Ver CFDI
                     </button>
@@ -208,6 +232,8 @@ async function llenarModalCFDI(id_venta, modo_vista) {
             
             document.getElementById("lblSelloEmisor").innerText = v.factura_sello_emisor;
             document.getElementById("lblSelloSAT").innerText = v.factura_sello_sat;
+            document.getElementById("lblCadenaOriginal").innerText =
+                `||1.1|${v.factura_uuid}|${v.factura_fecha}|${v.factura_sello_emisor}|00001000000500000000||`;
             
             btnTimbrar.classList.add('d-none');
             btnImprimir.classList.remove('d-none');
@@ -235,6 +261,25 @@ async function verFacturaOficial(id_venta) {
     if (exito) modalFacturaCFDI.show();
 }
 
+// ================= VISOR DE PDF DE FACTURAS =================
+
+// Abre el PDF de la factura dentro de la página. Si la factura es antigua y aún no
+// tiene PDF guardado, el servidor lo genera en ese momento.
+function verPdfFactura(id_venta, folio) {
+    const url = `ver_factura_pdf.php?id_venta=${id_venta}`;
+    document.getElementById('tituloModalPdfFactura').textContent = folio ? `Factura ${folio}` : 'Factura';
+    document.getElementById('visorPdfFactura').src = `${url}&t=${Date.now()}`;
+    document.getElementById('btnAbrirPdfFactura').href = url;
+    document.getElementById('btnDescargarPdfFactura').href = `${url}&descargar=1`;
+    modalPdfFactura.show();
+}
+
+// Cierra el modal del CFDI y, en cuanto termina de cerrarse, abre el visor del PDF
+function abrirPdfDesdeCFDI(id_venta, folio) {
+    pdfPendienteDeAbrir = { id_venta: id_venta, folio: folio };
+    modalFacturaCFDI.hide();
+}
+
 // ================= ACCIÓN DE TIMBRADO (GUARDAR EN BD) =================
 
 async function generarFacturaOFICIAL() {
@@ -251,19 +296,25 @@ async function generarFacturaOFICIAL() {
             body: JSON.stringify({ id_venta: parseInt(id_venta) })
         });
         
-        const data = await respuesta.json();
-        if (data.exito) {
-            // Refresca la tabla de atrás
-            cargarVentasPendientes(); 
-            
-            // Re-abre el mismo modal pero ya en modo "Factura Oficial"
-            await llenarModalCFDI(id_venta, 'FINAL');
-            alert("¡Factura timbrada exitosamente!");
-        } else {
-            alert("Error: " + data.mensaje);
+        const textoCrudo = await respuesta.text(); 
+        
+        try {
+            const data = JSON.parse(textoCrudo);
+            if (data.exito) {
+                cargarVentasPendientes(); 
+                await llenarModalCFDI(id_venta, 'FINAL');
+                // Mostrar de inmediato el PDF de la factura recién timbrada
+                abrirPdfDesdeCFDI(id_venta, data.folio);
+            } else {
+                alert("Error de BD: " + data.mensaje);
+            }
+        } catch (errorJson) {
+            alert("¡Cachamos el error oculto de PHP!\n\nEsto devolvió el servidor:\n" + textoCrudo);
+            console.error("Respuesta cruda de PHP:", textoCrudo);
         }
+        
     } catch (error) {
-        alert("Error de red al generar factura.");
+        alert("El servidor PHP no responde o el archivo no existe en la carpeta.");
     } finally {
         btn.disabled = false;
         btn.innerHTML = `<i class="fa-solid fa-bell-concierge me-2"></i> Timbrar Factura Oficial`;

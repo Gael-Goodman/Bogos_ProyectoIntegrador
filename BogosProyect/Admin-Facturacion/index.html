@@ -297,9 +297,35 @@
                     </button>
                     
                     <!-- Botón para Imprimir (Aparece en pestaña 2) -->
-                    <button type="button" class="btn btn-primary px-5 fw-bold rounded-pill shadow-sm d-none" id="btnImprimirFactura" onclick="window.print()">
-                        <i class="fa-solid fa-print me-2"></i> Imprimir / Guardar PDF
+                    <button type="button" class="btn btn-primary px-5 fw-bold rounded-pill shadow-sm d-none" id="btnImprimirFactura">
+                        <i class="fa-solid fa-file-pdf me-2"></i> Ver / Descargar PDF
                     </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- =========================================================================
+         MODAL: VISOR DEL PDF DE UNA FACTURA
+         ========================================================================= -->
+    <div class="modal fade" id="modalPdfFactura" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header text-white" style="background-color: #0b1a45;">
+                    <h5 class="modal-title fw-bold"><i class="fa-solid fa-file-pdf me-2"></i><span id="tituloModalPdfFactura">Factura</span></h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body p-0 bg-secondary">
+                    <iframe id="visorPdfFactura" title="PDF de la factura" src="about:blank" style="width: 100%; height: 75vh; border: 0; display: block;"></iframe>
+                </div>
+                <div class="modal-footer justify-content-center" style="background-color: #f1f3f5;">
+                    <button type="button" class="btn btn-secondary px-4 fw-bold rounded-pill" data-bs-dismiss="modal">Cerrar</button>
+                    <a class="btn btn-outline-primary px-4 fw-bold rounded-pill" id="btnAbrirPdfFactura" href="#" target="_blank" rel="noopener">
+                        <i class="fa-solid fa-up-right-from-square me-2"></i> Abrir en otra pestaña
+                    </a>
+                    <a class="btn text-white px-4 fw-bold rounded-pill" style="background-color: #d11f26;" id="btnDescargarPdfFactura" href="#">
+                        <i class="fa-solid fa-download me-2"></i> Descargar PDF
+                    </a>
                 </div>
             </div>
         </div>
